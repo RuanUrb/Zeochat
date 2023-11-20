@@ -7,6 +7,6 @@ import { MessagesModule } from './messages/messages.module';
 @Module({
   imports: [MessagesModule],
   controllers: [],
-  providers: [ChatGateway],
+  providers: [],
 })
 export class AppModule {}

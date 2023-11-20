@@ -1,21 +1,29 @@
-import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, ConnectedSocket } from '@nestjs/websockets';
+import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer, ConnectedSocket, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
 
 
 
-@WebSocketGateway({
-  cors: {
-    origin: '*'
-  }
-})
-export class MessagesGateway {
+@WebSocketGateway({})
+export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect{
 
   @WebSocketServer()
   server: Server
 
   constructor(private readonly messagesService: MessagesService) {}
+
+  afterInit(server: Server) {
+    console.log('Server started.')
+  }
+
+  handleConnection(client: Socket) {
+      console.log('Connected: ' + client.id)
+  }
+
+  handleDisconnect(client: Socket) {
+      console.log('Disconnected: ' + client.id)
+  }
 
   @SubscribeMessage('createMessage')
   async create(
@@ -52,6 +60,8 @@ export class MessagesGateway {
     ) {
     return this.messagesService.authenticate(name, client.id)
   }
+
+
   
 
 

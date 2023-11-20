@@ -5,12 +5,13 @@ import { Socket } from 'socket.io';
 
 @Injectable()
 export class MessagesService {
-  messages: Message[] = [{name: 'TopZ', text: 'i am the top Z.'}]
+  messages: Message[] = []
   
   clients = {}
 
   create(createMessageDto: CreateMessageDto, clientId: string) {
-    const msg = {name: this.clients[clientId], text: createMessageDto.text} 
+    //name: this.clients[clientId]
+    const msg = {name: createMessageDto.name, text: createMessageDto.text, date: createMessageDto.date} 
     this.messages.push(msg)
     console.log(msg)
     return msg
