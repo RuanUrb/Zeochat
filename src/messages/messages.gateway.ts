@@ -3,15 +3,26 @@ import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Server, Socket } from 'socket.io';
 
+interface Typing{
+  name: string,
+  isTyping: boolean
+}
 
+interface User{
+  name: string,
+  client: Socket
+}
 
 @WebSocketGateway({})
 export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect{
 
+  constructor(private readonly messagesService: MessagesService) {}
+
+  onlineUsers: User[] = []
+
+
   @WebSocketServer()
   server: Server
-
-  constructor(private readonly messagesService: MessagesService) {}
 
   afterInit(server: Server) {
     console.log('Server started.')
@@ -23,6 +34,9 @@ export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
   handleDisconnect(client: Socket) {
       console.log('Disconnected: ' + client.id)
+      this.onlineUsers = this.onlineUsers.filter((user)=>{
+        user.client != client
+      })
   }
 
   @SubscribeMessage('createMessage')
@@ -38,18 +52,18 @@ export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGa
 
   @SubscribeMessage('findAllMessages')
   findAll() {
-    const t = this.messagesService.findAll()
-    console.log(t)
-    return t
+    return this.messagesService.findAll()
   }
 
   @SubscribeMessage('typing')
   async typing(
-      @MessageBody('isTyping') isTyping: boolean,
+      @MessageBody() typing: Typing,
       @ConnectedSocket() client: Socket
   ) {
 
-    const name = await this.messagesService.getClientById(client.id)
+    //const name = await this.messagesService.getClientById(client.id)
+    const name = typing.name
+    const isTyping = typing.isTyping
     client.broadcast.emit('typing', {name, isTyping}) //broadcast emits to everytone except for the sender 
   }
 
@@ -58,7 +72,13 @@ export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGa
     @MessageBody('name') name: string, 
     @ConnectedSocket() client: Socket
     ) {
-    return this.messagesService.authenticate(name, client.id)
+      if(this.onlineUsers.every(user=> user.name !=name)){
+        client.broadcast.emit('joined', name)
+        this.onlineUsers.push({name, client})
+        console.log(name)
+      }
+    //return this.messagesService.authenticate(name, client.id)
+    
   }
 
 
