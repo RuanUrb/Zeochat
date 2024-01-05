@@ -3,34 +3,29 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Message } from './entities/schemas/message.schema';
 import { Model } from 'mongoose';
+import { User } from 'src/auth/entities/schemas/user.schema';
+import { AuthService } from 'src/auth/auth.service';
 
+interface ClientUser{
+  name: string,
+  avatarUrl: string
+}
 
 @Injectable()
 export class MessagesService {
   //messages: Message[] = []
-  constructor(@InjectModel(Message.name) private readonly messageModel: Model<Message>){}
+  constructor(@InjectModel(Message.name) private readonly messageModel: Model<Message>, private readonly authService: AuthService){}
 
-
-  async create(createMessageDto: CreateMessageDto, clientId: string) {
-    const {name, text} = createMessageDto
-    const newMsg = await this.messageModel.create({name, text, date: new Date()})
-    return newMsg
+  async create(text: string, clientUser: ClientUser) {
+    const {name, avatarUrl} = clientUser
+    const user = await this.authService.findUserByName(name)
+    const newMsg = await this.messageModel.create({name, text, date: new Date(), user})
+    const populatedMsg = await newMsg.populate({path: 'user', select: 'name avatarUrl'})
+    return populatedMsg
   }
 
   async findAll() {
-    const bns = await this.messageModel.find({})
-    console.log(bns)
+    const bns = await this.messageModel.find({}).populate({path: 'user', select: 'name avatarUrl'})
     return bns
   }
-  /*
-  authenticate(name: string, clientId: string){
-    this.clients[clientId] = name
-    console.log(clientId, name)
-    //return Object.values(this.clients)
-  }
-*/
-  getClientById(clientId: string){
-
-  }
-
 }

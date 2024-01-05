@@ -1,5 +1,6 @@
 import { Schema, Prop, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
+import { User } from "src/auth/entities/schemas/user.schema";
 
 export type MessageDocument = HydratedDocument<Message>
 
@@ -13,6 +14,9 @@ export class Message{
 
     @Prop({type: Date})
     date: Date
+
+    @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
+    user: User
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message)
