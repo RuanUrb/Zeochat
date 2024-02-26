@@ -1,0 +1,37 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - "chat_network"
+  nestjs:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    networks:
+      - chat_network
+    env_file:
+      - .env
+  reactapp:
+    build: 
+      context: ../client
+      dockerfile: Dockerfile
+    container_name: reactapp
+    ports:
+      - "8000:8000"
+    networks:
+      - chat_network
+    depends_on:
+      - nestjs
+
+networks:
+  chat_network:
+    driver: bridge

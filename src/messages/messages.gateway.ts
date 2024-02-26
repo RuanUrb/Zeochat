@@ -17,7 +17,11 @@ interface User{
   avatarUrl: string
 }
 
-@WebSocketGateway({})
+@WebSocketGateway({
+  cors: {
+    origin: 'http://localhost:8000'
+  }
+})
 export class MessagesGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect{
 
   constructor(private readonly messagesService: MessagesService, private readonly authService: AuthService){}

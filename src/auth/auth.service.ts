@@ -42,14 +42,14 @@ export class AuthService {
     async signin(loginUserDto: LoginUserDto){
         const {email, password} = loginUserDto
         const validationResult = loginUserSchema.validate(loginUserDto)
-        if(validationResult.error) throw new BadRequestException('Invalid data submit.')
+        if(validationResult.error) throw new BadRequestException('Please enter valid data.')
 
         const [user] = await this.userModel.find({email})
-        if(!user) throw new NotFoundException('User not found.')
+        if(!user) throw new NotFoundException('Incorrect e-mail or password. Please verify your data.')
 
         const [ salt, savedHash] = user.password.split('.')
         const hash = (await scrypt(password, salt, 32)) as Buffer
-        if(savedHash !== hash.toString('hex')) throw new BadRequestException('Wrong password.')
+        if(savedHash !== hash.toString('hex')) throw new BadRequestException('Incorrect e-mail or password. Please verify your data.')
         const payload = {sub: user._id, name: user.name, avatarUrl: user.avatarUrl}
         return {
             access_token: await this.jwtService.signAsync(payload)
